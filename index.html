@@ -101,7 +101,7 @@ footer{border-top:1px solid var(--linea);padding:28px 0 48px;color:var(--mut);fo
 @media (max-width:640px){.row2{grid-template-columns:1fr}.br{grid-template-columns:minmax(80px,38%) 1fr 54px}#info{top:auto;bottom:12px;max-height:45%}#top .hint{display:none}nav{display:none}#juego .arena{grid-template-columns:1fr}.vs{text-align:center}}
 .br.w{grid-template-columns:minmax(90px,30%) 1fr 118px}@media (max-width:640px){.br.w{grid-template-columns:minmax(80px,34%) 1fr 108px}}</style></head><body>
 <header class="top"><div class="wrap"><a class="brand" href="#"><span>✦</span>NAVEGANTES DEL COSMOS</a>
-<nav><a href="#juego">Juega</a><a href="#mapa">Mapa</a><a href="#palabras">Palabras</a><a href="#conceptos">Conceptos</a><a href="#tiempo">Colecciones</a><a href="#libro">El archivo</a></nav>
+<nav><a href="#juego">Juega</a><a href="#mapa">Mapa</a><a href="#buscar">Buscar</a><a href="#palabras">Palabras</a><a href="#conceptos">Conceptos</a><a href="#tiempo">Colecciones</a><a href="#libro">El archivo</a></nav>
 <a class="cta" href="#mapa">Ver el mapa</a></div></header>
 <main>
 <div class="wrap hero"><div>
@@ -122,6 +122,10 @@ footer{border-top:1px solid var(--linea);padding:28px 0 48px;color:var(--mut);fo
 <div class="box" id="top"><div id="subm"></div><input id="q" placeholder="Buscar título o autor y pulsar Enter"><div id="leg"></div>
 <div class="hint">Toca un tema para ocultarlo.</div></div>
 <div class="box" id="info"></div></div></div></section>
+<section id="buscar"><div class="wrap"><h2>Buscador</h2>
+<p class="lead">Escribe un título, un autor, un número de revista o un tema. Toca un resultado para verlo en el mapa.</p>
+<div class="card"><input id="bq" placeholder="Ej.: Benítez, Tayos, Revista Duda 170, abducción" style="width:100%;padding:12px 14px;border-radius:10px;border:1px solid var(--linea);background:#0e1117;color:var(--pergamino);font:inherit;font-size:16px">
+<div class="tabs" id="bg" style="margin:12px 0 4px"></div><div class="k" id="bk"></div><div id="br"></div></div></div></section>
 <section id="palabras"><div class="wrap"><h2>Las palabras que más se repiten</h2>
 <p class="lead" id="lead-pal"></p>
 <div class="tabs" id="gtabs"></div>
@@ -241,4 +245,13 @@ function initMap(){if(typeof ForceGraph3D!=="function"){$("subm").textContent="E
 const io=new IntersectionObserver(es=>{if(es.some(e=>e.isIntersecting)){io.disconnect();initMap()}},{rootMargin:"200px"});io.observe($("mapbox"));
 $("q").addEventListener("keydown",e=>{if(e.key!=="Enter")return;const q=e.target.value.toLowerCase().trim();if(!q)return;
  const n=nodes.find(n=>(n.t+" "+n.a).toLowerCase().includes(q));if(n){e.target.style.borderColor="";show(n)}else e.target.style.borderColor="#e66767"});
+
+(function(){const norm=s=>String(s||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
+ const idx=nodes.map(n=>norm(n.t+" "+n.a+" "+n.c.join(" ")+" "+NOM[n.g]));let bg=-1;const box=$("bg");
+ [["Todos",-1],...NOM.map((x,i)=>[x,i])].forEach(([x,g])=>{const b=document.createElement("button");b.className="tab"+(g<0?" on":"");b.innerHTML=(g>=0?`<span class="sw" style="background:${COL[g]}"></span>`:"")+esc(x);b.onclick=()=>{bg=g;box.querySelectorAll(".tab").forEach(z=>z.classList.remove("on"));b.classList.add("on");run()};box.appendChild(b)});
+ function run(){const q=norm($("bq").value.trim()).split(/\s+/).filter(Boolean);
+  const r=[];for(let i=0;i<nodes.length;i++){if(bg>=0&&nodes[i].g!==bg)continue;if(q.every(w=>idx[i].includes(w)))r.push(nodes[i])}
+  $("bk").textContent=q.length||bg>=0?`${nf(r.length)} resultados${r.length>60?" (primeros 60)":""}`:"Escribe para buscar entre "+nf(nodes.length)+" documentos.";
+  $("br").innerHTML=(q.length||bg>=0)?r.slice(0,60).map(n=>`<div class="bk" style="padding:8px 0;border-bottom:1px solid var(--linea);cursor:pointer" onclick="document.getElementById('mapa').scrollIntoView();setTimeout(()=>show(nodes[${n.id}]),400)"><span class="dot" style="display:inline-block;background:${COL[n.g]}"></span> ${esc(n.t)}<br><small style="color:var(--mut)">${esc(n.a)} · ${esc(n.c.join(" · "))} · ${nf(n.p)} págs.</small></div>`).join(""):""}
+ $("bq").addEventListener("input",run);run()})();
 </script></body></html>
